@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import datetime
 from datetime import timedelta
 import pandas as pd
 import numpy as np
@@ -45,7 +46,7 @@ if selected=="Real Time Analysis":
         time.sleep(2)
         success_placeholder.empty()
     
-    if st.sidebar.buttin("Stop Fetching"):
+    if st.sidebar.button("Stop Fetching"):
         #STOP THE MODULE WHICH FETCHES THE DATA FROM THE DATABASE.
         success_placeholder = st.sidebar.empty()
         success_placeholder.success("Data Fetching stopped")
@@ -80,7 +81,7 @@ if selected=="Real Time Analysis":
         #pass the values from the filter process to the dataframe to dynamically filter the dataframe
         st.sidebar.success("Filtering successfull")
 
-
+#PURELY FOR DEMO PURPOSE MAPS
     # Create a Folium map
     m = folium.Map(location=[37.7749, -122.4194], zoom_start=5)
 
@@ -99,13 +100,27 @@ if selected == "Historical data analysis":
     #Title for the sidebar page
     add_title =st.sidebar.title('Historical Data Analysis')
 
-    #Header for the sidebar
-    add_header =st.sidebar.header('Filtering Options')
-
-    #slider to select time frame
-    add_sidebar = st.sidebar.slider(
-        "Select the Time Frame (in Hours)", 1, 3, 1, help="Query data for the last N hours"
+    selection=st.sidebar.selectbox(
+        "Select The Data viewing options",
+        ("View Data From Today","Data From Another Day")
     )
+
+#Funtion for selecting the time from today.
+
+    if selection == "View Data From Today":
+        current_time=datetime.datetime.now().time()
+        max_time_today = (datetime.datetime.combine(datetime.date.today(), current_time) - datetime.timedelta(hours=1)).time()
+
+
+        selected_Time=st.sidebar.time_input(
+            "Provide The Start Time",
+            value=datetime.time(12,0)
+            )
+        if selected_Time > max_time_today:
+            st.sidebar.warning("Please choose the Time from the allowed Range")
+        else:
+            today=datetime.date.today()
+            selected_datetime_today = datetime.datetime.combine(today,selected_Time)
 
     if st.sidebar.button("Fetch Data"):
         success_placeholder = st.sidebar.empty()
