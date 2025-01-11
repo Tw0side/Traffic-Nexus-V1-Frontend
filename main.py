@@ -137,8 +137,8 @@ if selected == "Historical data analysis":
             "Provide The Stop Time",
             value=datetime.time(12,0)
             )
-        if Stop_Time < Start_Time:
-            st.sidebar.warning("Stopping time cannot be earlier than starting")
+        if Stop_Time < Start_Time and Stop_Time > current_time:
+            st.sidebar.warning("Stopping time cannot be earlier than starting and larger than current time")
         else:
             today=datetime.date.today()
             selected_datetime_today = datetime.datetime.combine(today,Stop_Time)
