@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from datetime import timedelta
 import pandas as pd
 import numpy as np
 import folium
@@ -13,7 +14,11 @@ selected=option_menu(
     orientation="horizontal"
 )
 
-
+#Constants for the file starts here
+min_time=15
+max_time=60
+step_time=15
+#Constants for the file Ends here
 
 if selected=="Real Time Analysis":
     #Title for the sidebar page
@@ -21,19 +26,37 @@ if selected=="Real Time Analysis":
     #Header for the sidebar
     add_header =st.sidebar.header('Filtering Options')
     #slider to select time frame
-    add_sidebar = st.sidebar.slider(
-        "Select the Time Frame (in Hours)", 1, 3, 1, help="Query data for the last N hours"
+    Timefilter = st.sidebar.slider(
+        "Select the Time Frame Within the last hour", 
+         min_value=min_time,
+         max_value=max_time,
+         value=min_time,
+         step=step_time, 
+         help="Query data for the last Hour"
     )
+    Timefilternew = timedelta(minutes=Timefilter)
+
+    
     if st.sidebar.button("Fetch Data"):
+        #CALL THE MODULE WHICH FETCHES THE DATA FROM THE DATABASE.
         success_placeholder = st.sidebar.empty()
         success_placeholder.success("Filters Applied Successfully!")
         # Wait for 2 seconds before clearing the message
         time.sleep(2)
         success_placeholder.empty()
-      #add checkbox
+    
+    if st.sidebar.buttin("Stop Fetching"):
+        #STOP THE MODULE WHICH FETCHES THE DATA FROM THE DATABASE.
+        success_placeholder = st.sidebar.empty()
+        success_placeholder.success("Data Fetching stopped")
+        # Wait for 2 seconds before clearing the message
+        time.sleep(2)
+        success_placeholder.empty()
+    
+    #Add checkbox
     add_multiselect = st.sidebar.multiselect(
         "Select Relevant Protocols",
-        options=['TCP','UDP','HTTP','HTTPS','ICMP']
+        options=['TCP','UDP','HTTP','HTTPS','ICMP','SSH','TLSv1']
     )
 
     #Filter traffic
@@ -41,6 +64,7 @@ if selected=="Real Time Analysis":
     incoming = st.sidebar.checkbox("Incoming Traffic")
     outgoing = st.sidebar.checkbox("Outgoing Outgoing")
 
+    #In the below block add the dynamic querying logic according to the incoming logic selected
     if alltraffic:
         st.write("All traffic")
 
@@ -53,6 +77,7 @@ if selected=="Real Time Analysis":
 
     #Apply filter
     if st.sidebar.button("Filter"):
+        #pass the values from the filter process to the dataframe to dynamically filter the dataframe
         st.sidebar.success("Filtering successfull")
 
 
@@ -67,7 +92,7 @@ if selected=="Real Time Analysis":
     # Add a circle marker
 
     # Display the map in Streamlit
-    st.title("Interactive Map with Leaflet")
+    st.title("GeoLocation")
     st_folium(m,width=2000, height=600)
 
 if selected == "Historical data analysis":
