@@ -11,6 +11,7 @@ from streamlit_option_menu import option_menu
 from connectioncheck import check_connection  # Assuming you have a method to check the connection
 from streamlit_cookies_manager import EncryptedCookieManager
 
+#Custom CSS labels
 st.markdown(
     """
     <style>
@@ -23,33 +24,46 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-def custom(label_text):#For custom text size and fonts UI Element
+#For custom text size and fonts UI Element
+def custom(label_text):
     st.markdown(f"<label class='custom-label'>{label_text}</label>",unsafe_allow_html=True)
 
-cookies = EncryptedCookieManager(prefix="login", password="twoside")  # Replace with a strong password
-if not cookies.ready():
-    st.stop()
+def initialize_cookies():
+    cookies = EncryptedCookieManager(prefix="login", password="twoside")  # Replace with a strong password
+    if not cookies.ready():
+        st.stop()
+    return cookies
 
-if 'connected' not in st.session_state:
-    st.session_state.connected = cookies.get("connected") == "True"
-    st.session_state.ip = cookies.get("ip")
-    st.session_state.bucket = cookies.get("bucket")
-    st.session_state.org = cookies.get("org")
-    st.session_state.api_token = cookies.get("api_token")
-    st.session_state.show_dashboard = True
+def validate_cookies(cookies):
+    if 'connected' not in st.session_state:
+        st.session_state.connected = cookies.get("connected") == "True"
+        st.session_state.ip = cookies.get("ip")
+        st.session_state.bucket = cookies.get("bucket")
+        st.session_state.org = cookies.get("org")
+        st.session_state.api_token = cookies.get("api_token")
+        st.session_state.show_dashboard = True
+
+def initialize_session_state():
+    if 'connected' not in st.session_state:
+        st.session_state.connected = False
+        st.session_state.ip = None
+        st.session_state.bucket = None
+        st.session_state.org = None
+        st.session_state.api_token = None
+        st.session_state.show_dashboard = False
 
 # Login page
 def login_page():
     st.title("Login")
     # Input fields for connection
     custom("IP Address")
-    IP = st.text_input("IP Address", value=st.session_state.ip or "", placeholder="Enter IP address")
+    IP = st.text_input("", value=st.session_state.ip or "", placeholder="Enter IP address")
     custom("Bucket Name")
-    Bucket = st.text_input("Bucket Name", value=st.session_state.bucket or "", placeholder="Enter Bucket Name")
+    Bucket = st.text_input("", value=st.session_state.bucket or "", placeholder="Enter Bucket Name")
     custom("Organization Name")
-    Org = st.text_input("Org Name", value=st.session_state.org or "", placeholder="Enter Organization Name")
+    Org = st.text_input("", value=st.session_state.org or "", placeholder="Enter Organization Name")
     custom("Api-Token")
-    API = st.text_input("API Token", value=st.session_state.api_token or "", placeholder="Enter API Token", type="password")
+    API = st.text_input("", value=st.session_state.api_token or "", placeholder="Enter API Token", type="password")
     
     # Connect button
     if st.button("Connect"):
@@ -81,11 +95,40 @@ def login_page():
     else:
         st.warning("Please fill in all fields.")
 
+def logout():
+
+    st.session_state.connected = False
+    st.session_state.ip = None
+    st.session_state.bucket = None
+    st.session_state.org = None
+    st.session_state.api_token = None
+    st.session_state.show_dashboard = False
+
+    cookies["connected"]="False"
+    cookies["ip"]=""
+    cookies["bucket"]=""
+    cookies["org"]=""
+    cookies["api_token"]=""
+    cookies.save()
+    st.rerun()
+
+def render_sidebar_filters():
+    st.sidebar.header("Filtering Options")
+    time_filter=st.sidebar.slider("Select the Time Frame Within the last hour", 
+        min_value=15, max_value=60, value=15, step=15, 
+        help="Query data for the last Hour")
+    return time_filter
+
+    
+
 # Dashboard page (after login)
 def dashboard_page():
     if 'connected' not in st.session_state or not st.session_state.connected:
-        st.warning("You need to log in first!")
+        login_page()
         st.stop()
+
+    if st.sidebar.button("Logout"):
+        logout()
 
     selected = option_menu(
         menu_title=None,
@@ -99,8 +142,8 @@ def dashboard_page():
     step_time = 15
 
     if selected == "Real Time Analysis":
-        add_title = st.sidebar.title('Real Time Analysis')
-        add_header = st.sidebar.header('Filtering Options')
+        st.sidebar.title('Real Time Analysis')
+        st.sidebar.header('Filtering Options')
 
         Timefilter = st.sidebar.slider(
             "Select the Time Frame Within the last hour", 
@@ -246,35 +289,15 @@ def dashboard_page():
             success_placeholder.empty()
 
 
-# Main app logic
+
 # Check if the user is already connected based on cookies
 # Main app logic
-if (
-    'connected' in st.session_state and st.session_state.connected
-) or (
-    cookies.get("connected") == "True"
-    and cookies.get("ip")
-    and cookies.get("bucket")
-    and cookies.get("org")
-    and cookies.get("api_token")
-):
-    
-
-    # Restore session state from cookies if not already set
-    if 'connected' not in st.session_state:
-        st.session_state.connected = True
-        st.session_state.ip = cookies.get("ip")
-        st.session_state.bucket = cookies.get("bucket")
-        st.session_state.org = cookies.get("org")
-        st.session_state.api_token = cookies.get("api_token")
-        st.session_state.show_dashboard = True
+cookies = initialize_cookies()
+validate_cookies(cookies)
 
     # Show the dashboard
-    if st.session_state.show_dashboard:
-        dashboard_page()
-    else:
-        st.error("Error: Dashboard is not enabled. Please restart the app.")
+if st.session_state.show_dashboard:
+    dashboard_page()
 else:
-    # Debugging: No valid connection
     login_page()
 
