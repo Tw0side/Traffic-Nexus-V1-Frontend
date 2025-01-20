@@ -1,35 +1,37 @@
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.exceptions import InfluxDBError
+import sqlalchemy
+from urllib.parse import quote_plus
+from sqlalchemy import create_engine,text
+import pymysql
 
 
-def check_connection(ip,bucket,org,api_token):
+def check_connection(ip,username,database,table,password):
     try:
 
+        host=ip
+        username=username
+        password=quote_plus(password)
+        database=database
+        table=table
+        
+        engine=create_engine(f"mysql+pymysql://{username}:{password}@{host}/")
 
-        client = InfluxDBClient(url=f"http://{ip}:8086",token=api_token,org=org)
-        orgs_api = client.organizations_api()
-        organizations = orgs_api.find_organizations()
+        def database_exists(engine, database):
+            with engine.connect() as connection:
+                # Query the information_schema to check if the database exists
+                query = text("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :database")
+                result = connection.execute(query, {"database": database}).fetchone()
+                # If the result is not None, the database exists
+                return result is not None
 
-        # Check if the provided organization exists
-        org_exists = any(o.name == org for o in organizations)
-        if not org_exists:
-            return False, f"Organization '{org}' does not exist."
-
-        buckets_api = client.buckets_api()
-        buckets = buckets_api.find_buckets().buckets
-
-
-        if buckets:
-            for b in buckets:
-                if b.name == bucket:
-                    return True, "Connected successfully to the database and bucket exists."
-            return False, f"Bucket '{bucket}' does not exist in organization '{org}'."
+        # Check if the database exists
+        if database_exists(engine, database):
+            print(f"The database '{database}' exists.")
+            return True  # Return True if the database exists
         else:
-            return False, "No buckets found. Check your organization name or permissions."
+            print(f"The database '{database}' does not exist.")
+            return False  # Return False if the database does not exist
 
-    except InfluxDBError as e:
-        # Handle InfluxDB-specific errors
-        return False, f"InfluxDB Error: {e}"
     except Exception as e:
-        # Handle other unexpected exceptions
-        return False, f"Connection failed: {e}"
+        print(f"Error: {e}")
+        return False
+        

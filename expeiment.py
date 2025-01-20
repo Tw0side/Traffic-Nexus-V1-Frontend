@@ -38,18 +38,20 @@ def validate_cookies(cookies):
     if 'connected' not in st.session_state:
         st.session_state.connected = cookies.get("connected") == "True"
         st.session_state.ip = cookies.get("ip")
-        st.session_state.bucket = cookies.get("bucket")
-        st.session_state.org = cookies.get("org")
-        st.session_state.api_token = cookies.get("api_token")
+        st.session_state.database = cookies.get("database")
+        st.session_state.table = cookies.get("table")
+        st.session_state.username = cookies.get("username")
+        st.session_state.password = cookies.get("password")
         st.session_state.show_dashboard = True
 
 def initialize_session_state():
     if 'connected' not in st.session_state:
         st.session_state.connected = False
         st.session_state.ip = None
-        st.session_state.bucket = None
-        st.session_state.org = None
-        st.session_state.api_token = None
+        st.session_state.database = None
+        st.session_state.table = None
+        st.session_state.username = None
+        st.session_state.password = None
         st.session_state.show_dashboard = False
 
 # Login page
@@ -57,39 +59,43 @@ def login_page():
     st.title("Login")
     # Input fields for connection
     custom("IP Address")
-    IP = st.text_input("", value=st.session_state.ip or "", placeholder="Enter IP address")
-    custom("Bucket Name")
-    Bucket = st.text_input("", value=st.session_state.bucket or "", placeholder="Enter Bucket Name")
-    custom("Organization Name")
-    Org = st.text_input("", value=st.session_state.org or "", placeholder="Enter Organization Name")
-    custom("Api-Token")
-    API = st.text_input("", value=st.session_state.api_token or "", placeholder="Enter API Token", type="password")
+    IP = st.text_input("", value=st.session_state.ip or "", placeholder="Enter IP address")#enter localhost ip for testing purposes
+    custom("DATABASE NAME")
+    DATABASE = st.text_input("", value=st.session_state.database or "", placeholder="Enter Database name")
+    custom("TABLE NAME")
+    TABLE = st.text_input("", value=st.session_state.table or "", placeholder="Enter Table Name")
+    custom("USERNAME")
+    USERNAME = st.text_input("", value=st.session_state.username or "", placeholder="Enter Username")
+    custom("PASSWORD")
+    PASSWORD = st.text_input("", value=st.session_state.password or "", placeholder="Enter Password", type="password")
     
     # Connect button
     if st.button("Connect"):
         try:
             ipaddress.ip_address(IP)
-            is_connected, message = check_connection(IP, Bucket, Org, API)
+            is_connected = check_connection(IP, USERNAME,DATABASE,TABLE, PASSWORD)
             if is_connected:
                 # Set session state to indicate the user is connected
                 st.session_state.connected = True
                 st.session_state.ip = IP
-                st.session_state.bucket = Bucket
-                st.session_state.org = Org
-                st.session_state.api_token = API
+                st.session_state.database = DATABASE
+                st.session_state.table = TABLE
+                st.session_state.username = USERNAME
+                st.session_state.password = PASSWORD
 
                 cookies["connected"] = "True"
                 cookies["ip"] = IP
-                cookies["bucket"] = Bucket
-                cookies["org"] = Org
-                cookies["api_token"] = API
+                cookies["database"] = DATABASE
+                cookies["table"] = TABLE
+                cookies["username"]=USERNAME
+                cookies["password"] = PASSWORD
                 cookies.save()
                 
                 # Wait and rerun to show the dashboard
                 st.session_state.show_dashboard = True
                 st.rerun()  # This ensures the state is updated and the page reloads
             else:
-                st.error(message)
+                st.error("Connection unsuccessfull")
         except ValueError:
             st.error("Enter a valid IP address.")
     else:
@@ -99,16 +105,18 @@ def logout():
 
     st.session_state.connected = False
     st.session_state.ip = None
-    st.session_state.bucket = None
-    st.session_state.org = None
-    st.session_state.api_token = None
+    st.session_state.database = None
+    st.session_state.table = None
+    st.session_state.username = None
+    st.session_state.password = None
     st.session_state.show_dashboard = False
 
     cookies["connected"]="False"
     cookies["ip"]=""
-    cookies["bucket"]=""
-    cookies["org"]=""
-    cookies["api_token"]=""
+    cookies["database"]=""
+    cookies["table"]=""
+    cookies["username"]=""
+    cookies["password"]=""
     cookies.save()
     st.rerun()
 
