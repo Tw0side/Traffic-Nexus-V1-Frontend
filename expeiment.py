@@ -165,6 +165,7 @@ def dashboard_page():
 
         if st.sidebar.button("Fetch Data"):
             # Call the module which fetches the data from the database.
+            
             success_placeholder = st.sidebar.empty()
             success_placeholder.success("Filters Applied Successfully!")
             time.sleep(2)
