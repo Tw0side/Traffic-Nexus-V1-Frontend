@@ -11,30 +11,34 @@ database = "network"
 encoded = quote_plus(password)
 
 # Create SQLAlchemy engine
-engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
-query = "SELECT * FROM Network WHERE DateTime >= NOW() - INTERVAL 120 MINUTE;"#set the minutes as a env variale
+def get_data(time_filter_pass):
+    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
+    query = f'SELECT * FROM Network WHERE DateTime >= NOW() - INTERVAL {time_filter_pass} MINUTE;'#set the minutes as a env variale
 
-df = pd.read_sql(query, con=engine)
+    df = pd.read_sql(query, con=engine)
 
-grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
-    "Source_Latitude": "first",
-    "Source_Longitude": "first",
-    "Destination_Latitude": "first",
-    "Destination_Longitude": "first",
-    "Date": "first",  # Convert to list
-    "Time": "first",  # Convert to list
-    "DateTime": list,  # Convert to list
-})
+    grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
+        "Source_Latitude": "first",
+        "Source_Longitude": "first",
+        "Destination_Latitude": "first",
+        "Destination_Longitude": "first",
+        "Date": "first",  # Convert to list
+        "Time": "first",  # Convert to list
+        "DateTime": list,  # Convert to list
+    })
+    return grouped_df
 
-protocols = ["UDP","TCP"]  # List of protocols to filter
-traffic_types = [1]
 
-filtered_df = grouped_df[
-    
-    (grouped_df["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
-    (grouped_df["Traffic"].isin(traffic_types))
-]
+def filters(time_filter_pass,protocol,traffic):    
+    protocols = protocol  # List of protocols to filter
+    traffic_types = traffic
+    group=get_data(time_filter_pass)
+    filtered_df = group[
+        
+        (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
+        (group["Traffic"].isin(traffic_types))
+ ]
 
-print(filtered_df)
+    print(filtered_df)
     
 
