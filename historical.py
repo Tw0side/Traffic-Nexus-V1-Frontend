@@ -11,30 +11,34 @@ database = "network"
 encoded = quote_plus(password)
 
 # Create SQLAlchemy engine
-engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
-query = "SELECT * FROM Network WHERE DateTime BETWEEN 'user_start_time' AND 'user_end_time';"#set the minutes as a env variale
+def get_prev_data(selected_datetime_start , selected_datetime_stop):
+    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
+    query = f"SELECT * FROM Network WHERE DateTime between '{selected_datetime_start}' and '{selected_datetime_stop}';"
+    df = pd.read_sql(query, con=engine)
+    df = df.drop_duplicates()
+    grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
+        "Source_Latitude": "first",
+        "Source_Longitude": "first",
+        "Destination_Latitude": "first",
+        "Destination_Longitude": "first",
+        "Date": "first",  # Convert to list
+        "Time": "first",  # Convert to list
+        "DateTime": list,  # Convert to list
+    })
+    return grouped_df
 
-df = pd.read_sql(query, con=engine)
 
-grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
-    "Source_Latitude": "first",
-    "Source_Longitude": "first",
-    "Destination_Latitude": "first",
-    "Destination_Longitude": "first",
-    "Date": "first",  # Convert to list
-    "Time": "first",  # Convert to list
-    "DateTime": list,  # Convert to list
-})
+def prev_filters(selected_datetime_start,selected_datetime_stop,protocol,traffic):    
+    protocols = protocol  # List of protocols to filter
+    traffic_types = traffic
+    group=get_prev_data(selected_datetime_start,selected_datetime_stop)
+    filtered_df = group[
+        
+        (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
+        (group["Traffic"].isin(traffic_types))
+ ]
 
-protocols = ["UDP","TCP"]  # List of protocols to filter
-traffic_types = [0 ,1]
-
-filtered_df = grouped_df[
-    
-    (grouped_df["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
-    (grouped_df["Traffic"].isin(traffic_types))
-]
-
-print(filtered_df)
+    print(filtered_df)
+    return filtered_df
     
 

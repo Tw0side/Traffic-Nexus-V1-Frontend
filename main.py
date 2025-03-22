@@ -10,8 +10,9 @@ from streamlit_folium import st_folium
 from streamlit_option_menu import option_menu
 from connectioncheck import check_connection  # Assuming you have a method to check the connection
 from streamlit_cookies_manager import EncryptedCookieManager
-from datafetch import get_data
-from datafetch import filters
+from datafetch import get_data , filters
+from historical import get_prev_data ,prev_filters
+
 
 
 #Custom CSS labels
@@ -26,6 +27,32 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+def map(df):
+                m = folium.Map(location=[20, 0], zoom_start=2)
+                for _, row in df.iterrows():
+                    folium.Marker(
+                        [row['Source_Latitude'], row['Source_Longitude']],
+                        popup=f"Source: {row['Source_IP']}",
+                        icon=folium.Icon(color='blue')
+                    ).add_to(m)
+                    folium.Marker(
+                        [row['Destination_Latitude'], row['Destination_Longitude']],
+                        popup=f"Destination: {row['Destination_IP']}",
+                        icon=folium.Icon(color='red')
+                    ).add_to(m)
+                    folium.PolyLine(
+                        [(row['Source_Latitude'], row['Source_Longitude']), (row['Destination_Latitude'], row['Destination_Longitude'])],
+                        color='green', weight=2
+                    ).add_to(m)
+                if 'map' not in st.session_state:
+                        st.session_state.map = m
+                else:
+                        st.session_state.map = m  # Update the map in the session state
+
+                    # Render the map
+                st_folium(st.session_state.map, width=700, height=500)
+
 
 #For custom text size and fonts UI Element
 def custom(label_text):
@@ -188,12 +215,9 @@ def dashboard_page():
         )
         
 
-        alltraffic = st.sidebar.checkbox("All Traffic")
         incoming = st.sidebar.checkbox("Incoming Traffic")
         outgoing = st.sidebar.checkbox("Outgoing Traffic")
 
-        if alltraffic:
-            direction=[0 ,1]
 
         if incoming:
             direction=[0]
@@ -202,8 +226,13 @@ def dashboard_page():
             direction=[1]
 
         if st.sidebar.button("Filter"):
-            filters(time_filter_pass=time_filter_new,protocol=add_multiselect,traffic=direction)
+            st.session_state.filtered_df=filters(time_filter_pass=time_filter_new,protocol=add_multiselect,traffic=direction)
+            
+        if 'filtered_df' in st.session_state:
+            map(st.session_state.filtered_df)    
             st.sidebar.success("Filtering successful")
+
+        
 
         # Set Threshold for packet counts
         st.sidebar.header("Set Threshold for packet counts")
@@ -217,13 +246,7 @@ def dashboard_page():
             success_placeholder.empty()
 
         # Demo map for visualization
-        m = folium.Map(location=[37.7749, -122.4194], zoom_start=5)
-        folium.Marker([37.7749, -122.4194], popup="San Francisco").add_to(m)
-        folium.Marker([40.7128, -74.0060], popup="New York").add_to(m)
-        folium.Marker([34.0522, -118.2437], popup="Los Angeles").add_to(m)
-
-        st.title("GeoLocation")
-        st_folium(m, width=2000, height=600)
+       
 
     elif selected == "Historical Data Analysis":
         add_title = st.sidebar.title('Historical Data Analysis')
@@ -242,14 +265,14 @@ def dashboard_page():
                 st.sidebar.warning("Please choose the Time from the allowed Range")
             else:
                 today = datetime.date.today()
-                selected_datetime_today = datetime.datetime.combine(today, Start_Time)
+                selected_datetime_start = datetime.datetime.combine(today, Start_Time)
 
             Stop_Time = st.sidebar.time_input("Provide The Stop Time", value=datetime.time(12, 0))
             if Stop_Time < Start_Time and Stop_Time > current_time:
                 st.sidebar.warning("Stopping time cannot be earlier than starting and larger than current time")
             else:
                 today = datetime.date.today()
-                selected_datetime_today = datetime.datetime.combine(today, Stop_Time)
+                selected_datetime_stop = datetime.datetime.combine(today, Stop_Time)
 
             if st.sidebar.button("Fetch Data"):
                 success_placeholder = st.sidebar.empty()
@@ -265,8 +288,11 @@ def dashboard_page():
             )
             Start_Time = st.sidebar.time_input("Provide The Start Time", value=datetime.time(12, 0))
             Stop_Time = st.sidebar.time_input("Provide The Stop Time", value=datetime.time(12, 0))
+            selected_datetime_start = datetime.datetime.combine(selected_Date, Start_Time)
+            selected_datetime_stop = datetime.datetime.combine(selected_Date, Stop_Time)
 
             if st.sidebar.button("Fetch Data"):
+                get_prev_data(selected_datetime_start ,selected_datetime_stop)
                 success_placeholder = st.sidebar.empty()
                 success_placeholder.success("Filters Applied Successfully!")
                 time.sleep(2)
@@ -277,20 +303,20 @@ def dashboard_page():
             options=['TCP', 'UDP', 'HTTP', 'HTTPS', 'ICMP']
         )
 
-        alltraffic = st.sidebar.checkbox("All Traffic")
         incoming = st.sidebar.checkbox("Incoming Traffic")
         outgoing = st.sidebar.checkbox("Outgoing Traffic")
 
-        if alltraffic:
-            st.write("All traffic")
-
         if incoming:
-            st.write("Incoming Traffic")
+            direction=[0]
 
         if outgoing:
-            st.write("Outgoing Traffic")
+            direction=[1]
 
         if st.sidebar.button("Filter"):
+            st.session_state.filtered_df=prev_filters(selected_datetime_start=selected_datetime_start,selected_datetime_stop=selected_datetime_stop,protocol=add_multiselect,traffic=direction)
+            
+        if 'filtered_df' in st.session_state:
+            map(st.session_state.filtered_df)    
             st.sidebar.success("Filtering successful")
 
         st.sidebar.header("Set Threshold for packet counts")
