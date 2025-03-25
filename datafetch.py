@@ -4,6 +4,7 @@ import pymysql
 from urllib.parse import quote_plus
 
 
+
 host = "localhost"
 user = "root"
 password = "Santo@2004"  # Add your MySQL root password here
@@ -13,10 +14,9 @@ encoded = quote_plus(password)
 # Create SQLAlchemy engine
 def get_data(time_filter_pass):
     engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
-    query = f'SELECT * FROM Network WHERE DateTime >= NOW() - INTERVAL {time_filter_pass} MINUTE;'#set the minutes as a env variale
-
+    query = f'SELECT * FROM Network WHERE DateTime >= NOW() - INTERVAL {time_filter_pass} MINUTE;' 
     df = pd.read_sql(query, con=engine)
-
+    df = df.drop_duplicates()
     grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
         "Source_Latitude": "first",
         "Source_Longitude": "first",
@@ -40,5 +40,7 @@ def filters(time_filter_pass,protocol,traffic):
  ]
 
     print(filtered_df)
+    return filtered_df
+    
     
 

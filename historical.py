@@ -36,9 +36,11 @@ def prev_filters(selected_datetime_start,selected_datetime_stop,protocol,traffic
         
         (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
         (group["Traffic"].isin(traffic_types))
- ]
+ ]  
+
 
     print(filtered_df)
-    return filtered_df
+    return filtered_df 
+    
     
 
