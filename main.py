@@ -12,6 +12,7 @@ from connectioncheck import check_connection  # Assuming you have a method to ch
 from streamlit_cookies_manager import EncryptedCookieManager
 from datafetch import get_data, filters
 from historical import get_prev_data, prev_filters
+from graphdata import graph_data
 
 # Initialize session state variables
 if 'connected' not in st.session_state:
@@ -47,6 +48,17 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+def graph(resampled,threshold):
+    plot_df = resampled.reset_index()
+    plot_df.columns = ['DateTime','Count']
+
+    plot_df['Threshold'] =threshold
+
+    st.bar_chart(plot_df.set_index('DateTime'))
+
+    st.line_chart(plot_data.set_index('DateTime'['Threshold'],color='#ff0000'))
+
 
 def map(df):
     m = folium.Map(location=[20, 0], zoom_start=2)
@@ -283,11 +295,14 @@ def dashboard_page():
 
         # Set Threshold for packet counts
         st.sidebar.header("Set Threshold for packet counts")
-        datatime = st.sidebar.slider("Select the Time interval To calculate mean", 1, 60)
+        datatime = st.sidebar.slider("Select the Time interval To calculate mean", 1, 30)
         packetcount = st.sidebar.slider("Select the number of packets allowed in this timeframe", 1)
 
         if st.sidebar.button("Apply The settings"):
             success_placeholder = st.sidebar.empty()
+            st.session_state.graph=graph_data(time_filter_new=time_filter_new,datatime=datatime)
+            st.title("Graph Plots")
+            graph(st.session_state.graph,packetcount)
             success_placeholder.success("Threshold Applied Successfully!")
             time.sleep(2)
             success_placeholder.empty()
