@@ -234,15 +234,15 @@ def toggle_fetching():
     else:
         st.sidebar.success("Auto-refresh disabled")
 
-def refresh_data(time_filter_new, protocols, direction, datatime, packetcount):
+def refresh_data(time_filter_new, protocols, direction, datatime, packetcount,IP,USERNAME,DATABASE,TABLE,PASSWORD):
     """Function to refresh the data at regular intervals"""
     current_time = time.time()
     # Check if it's time to refresh (every 30 seconds)
     if st.session_state.fetching and (current_time - st.session_state.last_refresh_time) >= AUTO_REFRESH_INTERVAL:
-        get_data(time_filter_pass=time_filter_new)
-        st.session_state.filtered_df = filters(time_filter_pass=time_filter_new, protocol=protocols, traffic=direction)
-        graph_data(time_filter_new=time_filter_new, datatime=datatime)
-        st.session_state.graph =  graphfilters(time_filter_pass=time_filter_new, protocol=protocols, traffic=direction ,datatime=datatime)
+        get_data(time_filter_pass=time_filter_new,IP=IP,USERNAME=USERNAME,DATABASE=DATABASE,TABLE=TABLE,PASSWORD=PASSWORD)
+        st.session_state.filtered_df = filters(time_filter_pass=time_filter_new, protocol=protocols, traffic=direction,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
+        graph_data(time_filter_new=time_filter_new, datatime=datatime,IP=IP,USERNAME=USERNAME,DATABASE=DATABASE,TABLE=TABLE,PASSWORD=PASSWORD)
+        st.session_state.graph =  graphfilters(time_filter_pass=time_filter_new, protocol=protocols, traffic=direction ,datatime=datatime,IP=IP,USERNAME=USERNAME,DATABASE=DATABASE,TABLE=TABLE,PASSWORD=PASSWORD)
         st.session_state.last_refresh_time = current_time
         return True
     return False
@@ -283,7 +283,7 @@ def dashboard_page():
 
         if st.sidebar.button("Fetch Data"):
             # Call the module which fetches the data from the database.
-            get_data(time_filter_pass=time_filter_new)
+            get_data(time_filter_pass=time_filter_new,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
             success_placeholder = st.sidebar.empty()
             success_placeholder.success("Filters Applied Successfully!")
             time.sleep(2)
@@ -305,7 +305,7 @@ def dashboard_page():
             direction.append(1)
 
         if st.sidebar.button("Filter"):
-            st.session_state.filtered_df = filters(time_filter_pass=time_filter_new, protocol=add_multiselect, traffic=direction)
+            st.session_state.filtered_df = filters(time_filter_pass=time_filter_new, protocol=add_multiselect, traffic=direction,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
             
         # Set Threshold for packet counts
         st.sidebar.header("Set Threshold for packet counts")
@@ -314,8 +314,8 @@ def dashboard_page():
 
         if st.sidebar.button("Apply The settings"):
             success_placeholder = st.sidebar.empty()
-            graph_data(time_filter_new=time_filter_new, datatime=datatime)
-            st.session_state.graph = graphfilters(time_filter_pass=time_filter_new, protocol=add_multiselect, traffic=direction ,datatime=datatime)
+            graph_data(time_filter_new=time_filter_new, datatime=datatime,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
+            st.session_state.graph = graphfilters(time_filter_pass=time_filter_new, protocol=add_multiselect, traffic=direction ,datatime=datatime,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
             success_placeholder.success("Threshold Applied Successfully!")
             time.sleep(2)
             success_placeholder.empty()
@@ -337,7 +337,7 @@ def dashboard_page():
             status_container.info(f"Auto-refresh is active. Next refresh in {int(time_until_next_refresh)} seconds")
             
             # Check if it's time to refresh the data
-            if refresh_data(time_filter_new, add_multiselect, direction, datatime, packetcount):
+            if refresh_data(time_filter_new, add_multiselect, direction, datatime, packetcount,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password):
                 st.rerun()
         
         # Display map and graph if data is available
@@ -345,13 +345,14 @@ def dashboard_page():
             st.subheader("Network Traffic Visualization")
             map(st.session_state.filtered_df)
             
-            # Show threshold warnings
-            show_threshold_warnings()
+            
             
             # Show graph if available
             if 'graph' in st.session_state and st.session_state.graph is not None:
                 st.title("Graph Plots")
                 graph(st.session_state.graph, packetcount)
+            # Show threshold warnings
+            show_threshold_warnings()
             
             # Show last refresh time
             if st.session_state.fetching:
@@ -389,7 +390,7 @@ def dashboard_page():
                 selected_datetime_stop = datetime.datetime.combine(today, Stop_Time)
 
             if st.sidebar.button("Fetch Data"):
-                get_prev_data(selected_datetime_start, selected_datetime_stop)
+                get_prev_data(selected_datetime_start, selected_datetime_stop,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
                 success_placeholder = st.sidebar.empty()
                 success_placeholder.success("Filters Applied Successfully!")
                 time.sleep(2)
@@ -407,7 +408,7 @@ def dashboard_page():
             selected_datetime_stop = datetime.datetime.combine(selected_Date, Stop_Time)
 
             if st.sidebar.button("Fetch Data"):
-                get_prev_data(selected_datetime_start, selected_datetime_stop)
+                get_prev_data(selected_datetime_start, selected_datetime_stop,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
                 success_placeholder = st.sidebar.empty()
                 success_placeholder.success("Filters Applied Successfully!")
                 time.sleep(2)
@@ -433,7 +434,7 @@ def dashboard_page():
                 selected_datetime_start=selected_datetime_start,
                 selected_datetime_stop=selected_datetime_stop,
                 protocol=add_multiselect,
-                traffic=direction
+                traffic=direction,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password
             )
             
         if 'filtered_df' in st.session_state and st.session_state.filtered_df is not None:
@@ -447,21 +448,23 @@ def dashboard_page():
 
         if st.sidebar.button("Apply The settings"):
             success_placeholder = st.sidebar.empty()
-            get_prevgraph_data(selected_datetime_start, selected_datetime_stop ,datatime)
+            get_prevgraph_data(selected_datetime_start, selected_datetime_stop, datatime,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password)
             st.session_state.filtered_graph = prev_graphfilters(
                 selected_datetime_start=selected_datetime_start,
                 selected_datetime_stop=selected_datetime_stop,
                 protocol=add_multiselect,
                 traffic=direction,
-                datatime=datatime
+                datatime=datatime,IP=st.session_state.ip,USERNAME=st.session_state.username,DATABASE=st.session_state.database,TABLE=st.session_state.table,PASSWORD=st.session_state.password
             )
-            if 'graph' in st.session_state and st.session_state.graph is not None:
-                show_threshold_warnings()
-                st.title("Graph Plots")
-                graph(st.session_state.filtered_graph, packetcount)
             success_placeholder.success("Threshold Applied Successfully!")
             time.sleep(2)
             success_placeholder.empty()
+
+        # Move this outside the button click block to ensure it shows whenever data is available
+        if 'filtered_graph' in st.session_state and st.session_state.filtered_graph is not None:
+            st.title("Graph Plots")
+            graph(st.session_state.filtered_graph, packetcount)
+            show_threshold_warnings()
 
 # Check if the user is already connected based on cookies
 # Main app logic

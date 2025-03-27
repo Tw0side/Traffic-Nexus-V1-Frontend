@@ -5,16 +5,21 @@ from urllib.parse import quote_plus
 
 
 
-host = "localhost"
-user = "root"
-password = "Santo@2004"  # Add your MySQL root password here
-database = "network"
-encoded = quote_plus(password)
+#host = "localhost"
+#user = "root"
+#password = "Santo@2004"  # Add your MySQL root password here
+#database = "network"
+#encoded = quote_plus(password)
 
 # Create SQLAlchemy engine
-def get_data(time_filter_pass):
+def get_data(time_filter_pass,IP, USERNAME, DATABASE, TABLE, PASSWORD):
+    host = IP
+    user = USERNAME
+    password = PASSWORD  # Add your MySQL root password here
+    database = DATABASE
+    encoded = quote_plus(password)
     engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
-    query = f'SELECT * FROM Network WHERE DateTime >= NOW() - INTERVAL {time_filter_pass} MINUTE;' 
+    query = f'SELECT * FROM {TABLE} WHERE DateTime >= NOW() - INTERVAL {time_filter_pass} MINUTE;' 
     df = pd.read_sql(query, con=engine)
     df = df.drop_duplicates()
     grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
@@ -29,10 +34,10 @@ def get_data(time_filter_pass):
     return grouped_df
 
 
-def filters(time_filter_pass,protocol,traffic):    
+def filters(time_filter_pass,protocol,traffic,IP, USERNAME, DATABASE, TABLE, PASSWORD):    
     protocols = protocol  # List of protocols to filter
     traffic_types = traffic
-    group=get_data(time_filter_pass)
+    group=get_data(time_filter_pass,IP,USERNAME,DATABASE,TABLE,PASSWORD)
     filtered_df = group[
         
         (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
