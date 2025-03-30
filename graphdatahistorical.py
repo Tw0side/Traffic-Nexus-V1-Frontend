@@ -21,16 +21,7 @@ def get_prevgraph_data(selected_datetime_start , selected_datetime_stop,datatime
     query = f"SELECT * FROM {TABLE} WHERE DateTime between '{selected_datetime_start}' and '{selected_datetime_stop}';"
     df = pd.read_sql(query, con=engine)
     df = df.drop_duplicates()
-    grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
-        "Source_Latitude": "first",
-        "Source_Longitude": "first",
-        "Destination_Latitude": "first",
-        "Destination_Longitude": "first",
-        "Date": "first",  # Convert to list
-        "Time": "first",  # Convert to list
-        "DateTime": "first",  # Convert to list
-    })
-    return grouped_df
+    return df
 
 
 def prev_graphfilters(selected_datetime_start,selected_datetime_stop,protocol,traffic,datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD):    

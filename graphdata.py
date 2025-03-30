@@ -27,16 +27,8 @@ def graph_data(time_filter_new, datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD
     df['DateTime'] = pd.to_datetime(df['DateTime'])
     
     # Group by IPs, Protocol, Traffic and get first occurrence
-    grouped_df = df.groupby(["Source_IP", "Destination_IP", "Protocol", "Traffic"], as_index=False).agg({
-        "Source_Latitude": "first",
-        "Source_Longitude": "first",
-        "Destination_Latitude": "first",
-        "Destination_Longitude": "first",
-        "Date": "first",
-        "Time": "first",
-        "DateTime": "first"  # Get first datetime instead of list
-    })
-    return grouped_df
+    
+    return df
 
 def graphfilters(time_filter_pass,protocol,traffic,datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD):    
     protocols = protocol  # List of protocols to filter
