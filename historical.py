@@ -17,7 +17,7 @@ def get_prev_data(selected_datetime_start , selected_datetime_stop,IP, USERNAME,
     password = PASSWORD  # Add your MySQL root password here
     database = DATABASE
     encoded = quote_plus(password)
-    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}/{database}")
+    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}:5675/{database}")
     query = f"SELECT * FROM {TABLE} WHERE DateTime between '{selected_datetime_start}' and '{selected_datetime_stop}';"
     df = pd.read_sql(query, con=engine)
     df = df.drop_duplicates()
