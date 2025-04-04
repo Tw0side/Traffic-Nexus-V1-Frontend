@@ -5,11 +5,7 @@ from urllib.parse import quote_plus
 
 
 
-#host = "localhost"
-#user = "root"
-#password = "Santo@2004"  # Add your MySQL root password here
-#database = "network"
-#encoded = quote_plus(password)
+
 
 # Create SQLAlchemy engine
 def graph_data(time_filter_new, datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD):
