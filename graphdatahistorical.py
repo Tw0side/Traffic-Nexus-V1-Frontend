@@ -4,11 +4,7 @@ import pymysql
 from urllib.parse import quote_plus
 
 
-#host = "localhost"
-#user = "root"
-#password = "Santo@2004"  # Add your MySQL root password here
-#database = "network"
-#encoded = quote_plus(password)
+
 
 # Create SQLAlchemy engine
 def get_prevgraph_data(selected_datetime_start , selected_datetime_stop,datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD):
