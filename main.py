@@ -144,7 +144,7 @@ def map(df):
     for _, row in df.iterrows():
         folium.Marker(
             [row['Source_Latitude'], row['Source_Longitude']],
-            popup=f"Source: {row['Source_IP']}\nTimestamp : {row['DateTime']}",
+            popup=f"Source: {row['Source_IP']}\nTimestamp : {row['DateTime']}\nProtocol : {row['Protocol']}",
             icon=folium.Icon(color='blue')
         ).add_to(m)
         folium.Marker(
