@@ -13,7 +13,7 @@ def check_connection(ip,username,database,table,password):
         database=database
         table=table
         
-        engine=create_engine(f"mysql+pymysql://{username}:{password}@{host}:5675/")
+        engine=create_engine(f"mysql+pymysql://{username}:{password}@{host}:3058/")
 
         def database_exists(engine, database):
             with engine.connect() as connection:
