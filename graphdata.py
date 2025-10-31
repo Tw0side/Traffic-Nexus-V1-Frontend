@@ -14,7 +14,7 @@ def graph_data(time_filter_new, datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD
     password = PASSWORD  # Add your MySQL root password here
     database = DATABASE
     encoded = quote_plus(password)
-    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}:5675/{database}")
+    engine = create_engine(f"mysql+pymysql://{user}:{encoded}@{host}:3058/{database}")
     query = f'SELECT * FROM {TABLE} WHERE DateTime >= NOW() - INTERVAL {time_filter_new} MINUTE;' 
     df = pd.read_sql(query, con=engine)
     df = df.drop_duplicates()
