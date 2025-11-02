@@ -30,11 +30,14 @@ def graphfilters(time_filter_pass,protocol,traffic,datatime,IP, USERNAME, DATABA
     protocols = protocol  # List of protocols to filter
     traffic_types = traffic
     group=graph_data(time_filter_pass,datatime,IP, USERNAME, DATABASE, TABLE, PASSWORD)
-    filtered_df = group[
-        
-        (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
-        (group["Traffic"].isin(traffic_types))
- ]
+    
+    # --- FIX ---
+    # Create masks to handle empty filter lists
+    protocol_mask = group["Protocol"].isin(protocols) if protocols else True
+    traffic_mask = group["Traffic"].isin(traffic_types)
+
+    filtered_df = group[protocol_mask & traffic_mask]
+    # --- END FIX ---
     
     # Set DateTime as index (must be datetime)
     grouped_df = filtered_df.set_index(pd.to_datetime(filtered_df['DateTime']))
