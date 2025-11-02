@@ -34,14 +34,18 @@ def filters(time_filter_pass,protocol,traffic,IP, USERNAME, DATABASE, TABLE, PAS
     protocols = protocol  # List of protocols to filter
     traffic_types = traffic
     group=get_data(time_filter_pass,IP,USERNAME,DATABASE,TABLE,PASSWORD)
-    filtered_df = group[
-        
-        (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
-        (group["Traffic"].isin(traffic_types))
- ]
+    
+    # --- FIX ---
+    # Create masks to handle empty filter lists
+    # If protocols list is empty (protocols is False), protocol_mask becomes True (no filter)
+    protocol_mask = group["Protocol"].isin(protocols) if protocols else True
+    # traffic_types should always have [0] or [1] from the radio button
+    traffic_mask = group["Traffic"].isin(traffic_types)
+
+    filtered_df = group[protocol_mask & traffic_mask]
+    # --- END FIX ---
 
     print(filtered_df)
     return filtered_df
     
     
-
