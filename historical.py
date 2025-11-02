@@ -33,15 +33,17 @@ def prev_filters(selected_datetime_start,selected_datetime_stop,protocol,traffic
     protocols = protocol  # List of protocols to filter
     traffic_types = traffic
     group=get_prev_data(selected_datetime_start,selected_datetime_stop,IP, USERNAME, DATABASE, TABLE, PASSWORD)
-    filtered_df = group[
-        
-        (group["Protocol"].isin(protocols)) & #to be passed from the expeiment.py file
-        (group["Traffic"].isin(traffic_types))
- ]  
+
+    # --- FIX ---
+    # Create masks to handle empty filter lists
+    protocol_mask = group["Protocol"].isin(protocols) if protocols else True
+    traffic_mask = group["Traffic"].isin(traffic_types)
+
+    filtered_df = group[protocol_mask & traffic_mask]
+    # --- END FIX ---
 
 
     print(filtered_df)
     return filtered_df 
     
     
-
